@@ -16,7 +16,7 @@
 # USA
 #
 
-import urlparse, logging, os, sys, random
+import logging, os, sys, random
 
 from twisted.web.http import Request
 from twisted.web.http import HTTPChannel
@@ -65,7 +65,7 @@ class ClientRequest(Request):
         return headers
 
     def getPathFromUri(self):
-        if (self.uri.find("http://") == 0):
+        if (self.uri.find("http://".encode()) == 0):
             index = self.uri.find('/', 7)
             return self.uri[index:]
 
@@ -91,7 +91,7 @@ class ClientRequest(Request):
 
         self.content.seek(0,0)
         postData          = self.content.read()
-        url               = 'http://' + host + path
+        url               = 'http://'.encode() + host.encode() + path
 
         self.dnsCache.cacheResolution(host, address)
 
@@ -102,7 +102,7 @@ class ClientRequest(Request):
         elif (self.urlMonitor.isSecureFavicon(client, path)):
             logging.debug("Sending spoofed favicon response...")
             self.sendSpoofedFaviconResponse()
-        elif (self.urlMonitor.isSecureLink(client, url)):
+        elif (self.urlMonitor.isSecureLink(client, url.decode())):
             logging.debug("Sending request via SSL...")
             self.proxyViaSSL(address, self.method, path, postData, headers,
                              self.urlMonitor.getSecurePort(client, url))

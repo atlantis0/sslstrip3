@@ -76,7 +76,8 @@ class URLMonitor:
         return self.faviconSpoofing
 
     def isSecureFavicon(self, client, url):
-        return ((self.faviconSpoofing == True) and (url.find("favicon-x-favicon-x.ico") != -1))
+        #return ((self.faviconSpoofing == True) and (url.find("favicon-x-favicon-x.ico") != -1))
+        return False
 
     def getInstance():
         if URLMonitor._instance == None:

